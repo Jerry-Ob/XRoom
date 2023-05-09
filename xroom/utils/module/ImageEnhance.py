@@ -1,5 +1,6 @@
 from .FlowModule import FlowModule
 from utils import improc
+import numpy as np
 
 class ImageEnhance(FlowModule):
     
@@ -9,6 +10,7 @@ class ImageEnhance(FlowModule):
     def forward(self, images, *args, **kwargs):
         images_ = []
         for image in images:
+            image = np.copy(image)
             image = improc.enhance.balance_light(image)
             image = improc.enhance.increase_contract(image)
             image = improc.enhance.sharpen(image, strength=self.sharpen)

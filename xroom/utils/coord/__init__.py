@@ -1,2 +1,2 @@
 from .translation import xywh2xyxy
-from .compute import xywh2area
+from .compute import xywh2area, image2wh
