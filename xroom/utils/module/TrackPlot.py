@@ -34,6 +34,8 @@ class TrackPlot(FlowModule):
             fig.add_scatter(x=x, y=y, mode='markers', marker_size=size)
         
         fig.update_layout(
+            width=800,
+            height=400,
             yaxis_range = [0, 1],
             xaxis_range = [0, 1],
             showlegend=False

@@ -5,12 +5,13 @@ import numpy as np
 
 class PeopleTrack(FlowModule):
     
-    def __init__(self, model='', gpu=False):
+    def __init__(self, model='', gpu=False, max_people=1):
         self.model = YOLO(model)
         if gpu:
             self.model.to('cuda')
         self.previous_anchors = None
         self.previous_mask = None
+        self.max_people = max_people
     
     def forward(self, image, *args, **kwargs):
         image = np.copy(image)
@@ -18,9 +19,9 @@ class PeopleTrack(FlowModule):
         labels = self.model.predict(image)
         valid_parts = []
         if len(labels) > 0 and labels[0].masks is not None:
-            masks = [m.masks.numpy()[0] for m in labels[0].masks]
-            anchors = [box.xyxyn.numpy()[0] for box in labels[0].boxes]
-            classes = [box.cls.numpy()[0] for box in labels[0].boxes]
+            masks = [m.masks.numpy()[0] for m in labels[0].masks][:self.max_people]
+            anchors = [box.xyxyn.numpy()[0] for box in labels[0].boxes][:self.max_people]
+            classes = [box.cls.numpy()[0] for box in labels[0].boxes][:self.max_people]
             previous_mask_ = []
             previous_anchors_ = []
             for id, (mask, anchor) in enumerate(zip(masks, anchors)):

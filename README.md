@@ -8,9 +8,14 @@ An application named **`XRoom`** is designed for this coursework.
 - Author: Jiarui LI (20216422)
 - E-mail: scyjl6@nottingham.edu.cn
 This software is going to adapt computer vision technique to implement a virtual classroom, which contains the functions:
-1. Segment objection in the classroom and display.
-2. Change the preface of the lecturer.
+1. Segment lecturer in the classroom and display.
+2. Change the background of the lecturer.
 3. Focus the camera on and track people who are speaking.
 4. Strengthen the display of the board.
-5. Create the virtual 3D classroom from the video
+5. Provide notes for the slides.
 
+
+```bash
+cd xroom
+streamlit run xroom.py --server.port 80
+```
