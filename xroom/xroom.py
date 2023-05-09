@@ -110,9 +110,14 @@ pannel_body = st
 
 icon,_ = pannel_control.columns(2)
 icon.image(PATH_ICON)
-control_path_video = pannel_control.text_input('🎞️ Video Path:', PATH_DEFAULT_VIDEO)
-control_start_play = pannel_control.button(' ▶️ Play ')
 
+pannel_video, pannel_camera = pannel_control.tabs(['Video', 'Camera'])
+control_path_video = pannel_video.text_input('🎞️ Video Path:', PATH_DEFAULT_VIDEO)
+control_start_play = pannel_video.button(' ▶️ Play ')
+
+control_camera_preview = pannel_camera.empty()
+control_start_camera = pannel_camera.button(' ▶️ Start ')
+control_camera_preview.image(PATH_PLACEHOLDER)
 
 pannel_setting.subheader('🛠️ Settings')
 control_background_select = pannel_setting.selectbox(
@@ -198,6 +203,7 @@ if control_start_play:
     compo_status_bar.empty()
     box_progress.progress(0)
     current_frame = 0
+    begin_time = time.time()
     while(cap.isOpened()):
         start_time = time.time()
         ret, frame = cap.read()
@@ -205,7 +211,10 @@ if control_start_play:
             break
         
         current_frame += 1
-        box_progress.progress(current_frame/frame_count)
+        current_time = time.time() - begin_time
+        box_progress.progress(current_frame/frame_count, '🕙{:0>2d}:{:0>2d}:{:0>2d}'.format(int(current_time/360),
+                                                                   int(current_time/60%60),
+                                                                   int(current_time%60)))
         
         if counter < conf_frame_extraction:
             counter += 1
@@ -225,10 +234,11 @@ if control_start_play:
         if board['ocr'][1] != -1:
             box_slide_note.table(board['ocr'][0][0][0])
             if board['ocr'][0][1][0]:
-                pannel = box_history.expander(board['ocr'][0][0][0][0])
-                slide, note = pannel.tabs(['Slide', 'Note'])
-                slide.image(board['stroke'][0][0])
-                note.table(board['ocr'][0][0][0])
+                if len(board['ocr'][0][0][0]) > 0:
+                    pannel = box_history.expander(board['ocr'][0][0][0][0])
+                    slide, note = pannel.tabs(['Slide', 'Note'])
+                    slide.image(board['stroke'][0][0])
+                    note.table(board['ocr'][0][0][0])
         else:
             box_slide_note.info('⏳ Note Refreshing...')
         
@@ -244,3 +254,66 @@ if control_start_play:
     box_people.image(PATH_PLACEHOLDER)
     box_origin.image(PATH_PLACEHOLDER)
     st.balloons()
+    
+if control_start_camera:
+    cap = cv2.VideoCapture(0)
+    origin_fps = cap.get(cv2.CAP_PROP_FPS)
+    flow_model = load_flow_model(conf_background_path, conf_gpu_acceleration,
+                             conf_ocr_refresh_thres, conf_lang_set,
+                             conf_track_plot_length, conf_person_occupy_rate,
+                             conf_multi_process, conf_input_scale, conf_super_resolve)
+
+    compo_status_bar.empty()
+    box_progress.progress(0)
+    current_frame = 0
+    begin_time = time.time()
+    
+    while(cap.isOpened()):
+        ret, frame = cap.read()
+        if frame is None or not ret:
+            break
+        # frame = cv2.resize(frame, [int(frame.shape[1]*0.2), int(frame.shape[0]*0.2)])
+        control_camera_preview.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        start_time = time.time()
+        ret, frame = cap.read()
+        if frame is None or not ret:
+            break
+        
+        current_frame += 1
+        current_time = time.time() - begin_time
+        box_progress.progress(0, '🕙{:0>2d}:{:0>2d}:{:0>2d}'.format(int(current_time/360),
+                                                                   int(current_time/60%60),
+                                                                   int(current_time%60)))
+            
+        box_status.subheader('▶️ In Class')
+        box_origin.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        
+        flow = flow_model.forward(frame)
+        board = flow.get('board')
+        people = flow.get('people')
+        
+        box_slide.image(board['enhanced'][0][0])
+        box_slide_stroke.image(board['stroke'][0][0])
+        if board['ocr'][1] != -1:
+            box_slide_note.table(board['ocr'][0][0][0])
+            if board['ocr'][0][1][0]:
+                if len(board['ocr'][0][0][0]) > 0:
+                    pannel = box_history.expander(board['ocr'][0][0][0][0])
+                    slide, note = pannel.tabs(['Slide', 'Note'])
+                    slide.image(board['stroke'][0][0])
+                    note.table(board['ocr'][0][0][0])
+        else:
+            box_slide_note.info('⏳ Note Refreshing...')
+        
+        for person in people['people'][0]:
+            box_people.image(person)
+        box_track.plotly_chart(people['path'][0], True)
+        
+        fps = 1 / (time.time() - start_time)
+        box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
+        
+        box_runtime.write(flow_model.run_time())
+        
+    
+st.balloons()
+
