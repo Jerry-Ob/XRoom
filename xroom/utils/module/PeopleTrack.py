@@ -5,8 +5,8 @@ import numpy as np
 
 class PeopleTrack(FlowModule):
     
-    def __init__(self, model_scale='n', gpu=False):
-        self.model = YOLO('yolov8{}-seg.pt'.format(model_scale))
+    def __init__(self, model='', gpu=False):
+        self.model = YOLO(model)
         if gpu:
             self.model.to('cuda')
         self.previous_anchors = None
@@ -17,13 +17,15 @@ class PeopleTrack(FlowModule):
         image = cv2.resize(image, [640, 384])
         labels = self.model.predict(image)
         valid_parts = []
-        if len(labels) > 0:
+        if len(labels) > 0 and labels[0].masks is not None:
             masks = [m.masks.numpy()[0] for m in labels[0].masks]
             anchors = [box.xyxyn.numpy()[0] for box in labels[0].boxes]
+            classes = [box.cls.numpy()[0] for box in labels[0].boxes]
             previous_mask_ = []
             previous_anchors_ = []
             for id, (mask, anchor) in enumerate(zip(masks, anchors)):
-                
+                if classes[id] != 0:
+                    continue
                 image_ = np.copy(image)
                 image_[:,:,0] = image_[:,:,0] * mask
                 image_[:,:,1] = image_[:,:,1] * mask
