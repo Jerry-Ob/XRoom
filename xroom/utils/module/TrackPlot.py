@@ -4,10 +4,11 @@ import numpy as np
 
 class TrackPlot(FlowModule):
     
-    def __init__(self, max_length = 20):
+    def __init__(self, max_length = 20, plot_size=10):
         self.previous_path = {}
         self.counter = 0
         self.max_length = max_length
+        self.plot_size = plot_size
     
     def forward(self, images, masks, anchors, *args, **kwargs):
         
@@ -30,7 +31,7 @@ class TrackPlot(FlowModule):
             
             size = np.array(list(range(self.max_length+1, 0, -1)))
             size = (size-np.min(size))/(np.max(size)-np.min(size))
-            size = size*10
+            size = size*self.plot_size
             fig.add_scatter(x=x, y=y, mode='markers', marker_size=size)
         
         fig.update_layout(

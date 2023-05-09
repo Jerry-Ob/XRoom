@@ -28,24 +28,21 @@ PATH_ICON = './image/icon-long.png'
 PATH_ICON_SMALL = './image/icon.png'
 PATH_DEFAULT_VIDEO = '../video/sample-0.mp4'
 
-@st.cache_resource
 def load_people_track_model(gpu=False):
     return PeopleTrack(model=WEIGHT_YOLOV8SEG_PATH, gpu=gpu, max_people=1)
 
-@st.cache_resource
 def load_optical_char_recog_model(lang=['en'], gpu=False, refresh_thres=800):
     return FlowModuleAsync(
         OpticalCharRecognition(lang=lang, gpu=gpu, refresh_thres=refresh_thres)
     )
 
-@st.cache_resource
 def load_super_resolve_model(gpu=False):
     return SuperResolution(weights=WEIGHT_DRRN_PATH, residual_layers=9, gpu=gpu)
 
-@st.cache_resource
 def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
                     ocr_lang=['en'], track_plot_length=25, person_occupy_rate=0.6,
-                    multi_process=-1, input_scale=0.5, super_resolve=True):
+                    multi_process=-1, input_scale=0.5, super_resolve=True,
+                    track_plot_size=10):
     board_flow = FlowModuleList([
         BoardTracker(max_board=1, transition=0.9, drop_thres=0.97),
         FlowModuleBranch({
@@ -71,7 +68,7 @@ def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
                     PersonBackgroundFuse(background=background_path, occupy_rate=person_occupy_rate),
                     BGR2RGB()
                 ]),
-                'path': TrackPlot(max_length=track_plot_length)
+                'path': TrackPlot(max_length=track_plot_length, plot_size=track_plot_size)
             })  
         ])
     else:
@@ -83,7 +80,7 @@ def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
                     PersonBackgroundFuse(background=background_path, occupy_rate=person_occupy_rate),
                     BGR2RGB()
                 ]),
-                'path': TrackPlot(max_length=track_plot_length)
+                'path': TrackPlot(max_length=track_plot_length, plot_size=track_plot_size)
             })  
         ])
 
@@ -135,6 +132,7 @@ conf_lang_set = [language_map.get(item) for item in conf_lang_set]
 conf_ocr_refresh_thres = pannel_setting_more.slider('OCR Refresh Threshold:', 600, 1200, 800, 10)
 pannel_setting_more.subheader('Person Track')
 conf_track_plot_length = pannel_setting_more.slider('Track plot length', 10, 50, 25, 5)
+conf_track_plot_size = pannel_setting_more.slider('Track plot size', 10, 40, 20, 1)
 conf_person_occupy_rate = pannel_setting_more.slider('Person Size', 0.4, 0.8, 0.6, 0.05)
 conf_super_resolve = pannel_setting_more.checkbox('Super Resolution', True)
 pannel_setting_more.subheader('Global')
@@ -198,7 +196,8 @@ if control_start_play:
     flow_model = load_flow_model(conf_background_path, conf_gpu_acceleration,
                              conf_ocr_refresh_thres, conf_lang_set,
                              conf_track_plot_length, conf_person_occupy_rate,
-                             conf_multi_process, conf_input_scale, conf_super_resolve)
+                             conf_multi_process, conf_input_scale, conf_super_resolve,
+                             conf_track_plot_size)
 
     compo_status_bar.empty()
     box_progress.progress(0)
@@ -261,7 +260,8 @@ if control_start_camera:
     flow_model = load_flow_model(conf_background_path, conf_gpu_acceleration,
                              conf_ocr_refresh_thres, conf_lang_set,
                              conf_track_plot_length, conf_person_occupy_rate,
-                             conf_multi_process, conf_input_scale, conf_super_resolve)
+                             conf_multi_process, conf_input_scale, conf_super_resolve,
+                             conf_track_plot_size)
 
     compo_status_bar.empty()
     box_progress.progress(0)
@@ -314,6 +314,4 @@ if control_start_camera:
         
         box_runtime.write(flow_model.run_time())
         
-    
-st.balloons()
 
