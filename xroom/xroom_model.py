@@ -1,6 +1,7 @@
 import cv2
 import time
 from utils import *
+from config import *
 
 def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
                     ocr_lang=['en'], track_plot_length=25, person_occupy_rate=0.6,
