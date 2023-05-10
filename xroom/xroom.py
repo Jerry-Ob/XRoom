@@ -2,96 +2,12 @@ import streamlit as st
 import cv2
 import time
 from utils import *
+from config import *
+from xroom_model import load_flow_model
 
-WEIGHT_YOLOV8SEG_PATH = './weights/yolov8n-seg.pt'
-WEIGHT_DRRN_PATH = './weights/drrn_B1U9.pth'
-background_packs = {
-    'Sky': './backgrounds/sky.jpg',
-    'Forest': './backgrounds/forest.jpg',
-    'Mountain': './backgrounds/mountain.jpg',
-    'Night': './backgrounds/night.jpg',
-    'Valley': './backgrounds/valley.jpg'
-}
-language_map = {
-    'English': 'en',
-    'Simplified Chinese': 'ch_sim',
-    'Traditional Chinese': 'ch_tra',
-    'Spanish': 'es',
-    'French': 'fr',
-    'Japanese': 'ja',
-    'Korean': 'ko',
-    'Russian': 'ru',
-    'Italian': 'it'
-}
-PATH_PLACEHOLDER = './image/placeholder.png'
-PATH_ICON = './image/icon-long.png'
-PATH_ICON_SMALL = './image/icon.png'
-PATH_DEFAULT_VIDEO = '../video/sample-0.mp4'
+########## Page Construct ###############
 
-def load_people_track_model(gpu=False):
-    return PeopleTrack(model=WEIGHT_YOLOV8SEG_PATH, gpu=gpu, max_people=1)
-
-def load_optical_char_recog_model(lang=['en'], gpu=False, refresh_thres=800):
-    return FlowModuleAsync(
-        OpticalCharRecognition(lang=lang, gpu=gpu, refresh_thres=refresh_thres)
-    )
-
-def load_super_resolve_model(gpu=False):
-    return SuperResolution(weights=WEIGHT_DRRN_PATH, residual_layers=9, gpu=gpu)
-
-def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
-                    ocr_lang=['en'], track_plot_length=25, person_occupy_rate=0.6,
-                    multi_process=-1, input_scale=0.5, super_resolve=True,
-                    track_plot_size=10):
-    board_flow = FlowModuleList([
-        BoardTracker(max_board=1, transition=0.9, drop_thres=0.97),
-        FlowModuleBranch({
-            'enhanced': FlowModuleList([
-                ImageEnhance(sharpen=0.1),
-                BGR2RGB()
-            ]),
-            'stroke': StrokeImage(strenth=6),
-            'ocr': FlowModuleList([
-                StrokeImage(strenth=6),
-                load_optical_char_recog_model(lang=ocr_lang, gpu=gpu, refresh_thres=ocr_refresh_thres),
-            ])
-        }, multi_process=multi_process),
-    ])
-    
-    if super_resolve:
-        people_flow = FlowModuleList([
-            ScaleImage(rate=input_scale),
-            load_people_track_model(gpu=gpu),
-            FlowModuleBranch({
-                'people': FlowModuleList([
-                    load_super_resolve_model(gpu=gpu),
-                    PersonBackgroundFuse(background=background_path, occupy_rate=person_occupy_rate),
-                    BGR2RGB()
-                ]),
-                'path': TrackPlot(max_length=track_plot_length, plot_size=track_plot_size)
-            })  
-        ])
-    else:
-        people_flow = FlowModuleList([
-            ScaleImage(rate=input_scale),
-            load_people_track_model(gpu=gpu),
-            FlowModuleBranch({
-                'people': FlowModuleList([
-                    PersonBackgroundFuse(background=background_path, occupy_rate=person_occupy_rate),
-                    BGR2RGB()
-                ]),
-                'path': TrackPlot(max_length=track_plot_length, plot_size=track_plot_size)
-            })  
-        ])
-
-    flow_model = FlowModuleBranch({
-        'people': people_flow,
-        'board': board_flow
-    }, multi_process=multi_process)
-    
-    return flow_model
-
-
+## Page Init 
 st.set_page_config(page_title='XRoom', layout='wide', page_icon=PATH_ICON_SMALL)
 hide_streamlit_style = """
                 <style>
@@ -101,10 +17,12 @@ hide_streamlit_style = """
                 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+## Page Construct
 pannel_control = st.sidebar.container()
 pannel_setting = st.sidebar.container()
 pannel_body = st
 
+## Sidebar Construct
 icon,_ = pannel_control.columns(2)
 icon.image(PATH_ICON)
 
@@ -122,6 +40,7 @@ control_background_select = pannel_setting.selectbox(
     list(background_packs.keys())
 )
 
+## Setting Pannel Construct
 conf_background_path = background_packs[control_background_select]
 pannel_setting.image(conf_background_path)
 pannel_setting_more = pannel_setting.expander('⚙️ Advanced Settings')
@@ -147,7 +66,7 @@ conf_multi_process = {
 }[conf_multi_process]
 conf_gpu_acceleration = pannel_setting_more.checkbox('GPU Acceleration', False)
 
-
+## Main Page Construct
 compo_status_bar = pannel_body.empty()
 box_header_icon,_,_,_,_,_,_,_,_,_,_,_,_,_,_  = pannel_body.columns(15)
 box_status = pannel_body.empty()
@@ -173,12 +92,13 @@ pannel_history.subheader('📍 Track Path')
 box_track = pannel_history.empty()
 box_track = box_track.empty()
 
+## Status Pannel Construct
 pannel_runtime.subheader('FPS')
 box_fps= pannel_runtime.empty()
 pannel_runtime.subheader('Time Explain')
 box_runtime = pannel_runtime.empty()
 
-
+## Page Initialize (Put Placeholder)
 box_people.image(PATH_PLACEHOLDER)
 box_origin.image(PATH_PLACEHOLDER)
 box_track.image(PATH_PLACEHOLDER)
@@ -186,6 +106,7 @@ box_slide.image(PATH_PLACEHOLDER)
 box_slide_stroke.image(PATH_PLACEHOLDER)
 box_slide_note.info('Board OCR Information')
 
+############## Video Mode ##############
 if control_start_play:
     compo_status_bar.info('⏳ Loading Model...')
     cap = cv2.VideoCapture(control_path_video)
@@ -248,14 +169,14 @@ if control_start_play:
         fps = 1 / (time.time() - start_time)
         
         box_fps.metric('Real Time', '{:.1f}'.format(fps), '{}'.format(int(fps-origin_fps)))
-        # box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
         
         box_runtime.write(flow_model.run_time())
     box_status.subheader('⏸️ Class Over')
     box_people.image(PATH_PLACEHOLDER)
     box_origin.image(PATH_PLACEHOLDER)
     st.balloons()
-    
+
+############## Camera Mode ##############
 if control_start_camera:
     cap = cv2.VideoCapture(0)
     origin_fps = cap.get(cv2.CAP_PROP_FPS)
@@ -274,7 +195,6 @@ if control_start_camera:
         ret, frame = cap.read()
         if frame is None or not ret:
             break
-        # frame = cv2.resize(frame, [int(frame.shape[1]*0.2), int(frame.shape[0]*0.2)])
         control_camera_preview.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         start_time = time.time()
         ret, frame = cap.read()
@@ -313,7 +233,6 @@ if control_start_camera:
         
         fps = 1 / (time.time() - start_time)
         box_fps.metric('Real Time', '{:.1f}'.format(fps), '{}'.format(int(fps-origin_fps)))
-        # box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
         
         box_runtime.write(flow_model.run_time())
         
