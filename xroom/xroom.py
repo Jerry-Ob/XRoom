@@ -26,23 +26,38 @@ pannel_body = st
 icon,_ = pannel_control.columns(2)
 icon.image(PATH_ICON)
 
-pannel_video, pannel_camera = pannel_control.tabs(['Video', 'Camera'])
+pannel_video, pannel_camera = pannel_control.tabs(['🎞️ Video', '📹 Camera'])
 control_path_video = pannel_video.text_input('🎞️ Video Path:', PATH_DEFAULT_VIDEO)
-control_start_play = pannel_video.button(' ▶️ Play ')
+control_start_play = pannel_video.button('&nbsp;🟢 Play&nbsp;')
 
+pannel_camera.write('📹 Camera Preview')
 control_camera_preview = pannel_camera.empty()
-control_start_camera = pannel_camera.button(' ▶️ Start ')
+control_start_camera = pannel_camera.button('&nbsp;🟢 Start&nbsp;')
 control_camera_preview.image(PATH_PLACEHOLDER)
 
 pannel_setting.subheader('🛠️ Settings')
-control_background_select = pannel_setting.selectbox(
-    'Background',
+background_select, style_select = pannel_setting.columns(2)
+control_background_select = background_select.selectbox(
+    '🖼️ Background',
     list(background_packs.keys())
 )
+control_style_select = style_select.selectbox(
+    '🪄 Style',
+    list(style_filters.keys())
+)
+control_style_select = style_filters[control_style_select]
+conf_background_path = background_packs[control_background_select]
+
+background_preview = cv2.imread(conf_background_path)
+preview_filter = StyleFilter(control_style_select)
+background_preview = preview_filter.forward([background_preview])[0]
+background_preview = background_preview[0]
+background_preview = cv2.cvtColor(background_preview, cv2.COLOR_BGR2RGB)
+pannel_setting.image(background_preview)
+
 
 ## Setting Pannel Construct
-conf_background_path = background_packs[control_background_select]
-pannel_setting.image(conf_background_path)
+
 pannel_setting_more = pannel_setting.expander('⚙️ Advanced Settings')
 pannel_runtime = pannel_setting.expander('⏳ Run Time')
 pannel_setting_more.subheader('Board')
@@ -55,7 +70,7 @@ conf_track_plot_size = pannel_setting_more.slider('Track plot size', 10, 40, 20,
 conf_person_occupy_rate = pannel_setting_more.slider('Person Size', 0.4, 0.8, 0.6, 0.05)
 conf_super_resolve = pannel_setting_more.checkbox('Super Resolution', True)
 pannel_setting_more.subheader('Global')
-conf_frame_extraction = pannel_setting_more.slider('Frame Extraction', 0, 16, 5, 1)
+conf_frame_extraction = pannel_setting_more.slider('Frame Extraction', 0, 10, 0, 1)
 conf_input_scale = pannel_setting_more.slider('Image Scale', 0.1, 1.0, 0.25, 0.05)
 conf_multi_process = pannel_setting_more.selectbox('Multi Process', ['Off', '2', '4', '8'])
 conf_multi_process = {
@@ -70,7 +85,7 @@ conf_gpu_acceleration = pannel_setting_more.checkbox('GPU Acceleration', False)
 compo_status_bar = pannel_body.empty()
 box_header_icon,_,_,_,_,_,_,_,_,_,_,_,_,_,_  = pannel_body.columns(15)
 box_status = pannel_body.empty()
-box_status.subheader('⏸️ Class Over')
+box_status.subheader('🔘 Class Over')
 box_progress = pannel_body.progress(0)
 box_header_icon.image(PATH_ICON_SMALL)
 pannel_lecturer, pannel_slides, pannel_history = pannel_body.columns(3)
@@ -98,6 +113,22 @@ box_fps= pannel_runtime.empty()
 pannel_runtime.subheader('Time Explain')
 box_runtime = pannel_runtime.empty()
 
+## Copyright Construct
+pannel_copyright = pannel_setting.expander('©️ Copyright')
+pannel_copyright.markdown('`X-Room ©️ Copyright 2023 Jiarui LI`')
+pannel_copyright.subheader('Author')
+pannel_copyright.markdown('👨‍🎓 Jiarui LI')
+pannel_copyright.markdown('🏫 University of Nottingham Ningbo China')
+pannel_copyright.markdown('📫 scyjl6@nottingham.edu.cn')
+
+pannel_copyright.subheader('Project')
+pannel_copyright.image(PATH_ICON)
+pannel_copyright.markdown('**X-Room**')
+pannel_copyright.markdown('Virtual classroom')
+pannel_copyright.markdown('`COMP3052 UNNC` Computer Vision Project')
+pannel_copyright.markdown('Supervised by Dr.Lu Zheng')
+
+
 ## Page Initialize (Put Placeholder)
 box_people.image(PATH_PLACEHOLDER)
 box_origin.image(PATH_PLACEHOLDER)
@@ -118,7 +149,7 @@ if control_start_play:
                              conf_ocr_refresh_thres, conf_lang_set,
                              conf_track_plot_length, conf_person_occupy_rate,
                              conf_multi_process, conf_input_scale, conf_super_resolve,
-                             conf_track_plot_size)
+                             conf_track_plot_size, control_style_select)
 
     compo_status_bar.empty()
     box_progress.progress(0)
@@ -142,7 +173,7 @@ if control_start_play:
         else:
             counter = 0
             
-        box_status.subheader('▶️ In Class')
+        box_status.subheader('🔴 In Class')
         box_origin.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         
         flow = flow_model.forward(frame)
@@ -171,7 +202,7 @@ if control_start_play:
         box_fps.metric('Real Time', '{:.1f}'.format(fps), '{}'.format(int(fps-origin_fps)))
         
         box_runtime.write(flow_model.run_time())
-    box_status.subheader('⏸️ Class Over')
+    box_status.subheader('🔘 Class Over')
     box_people.image(PATH_PLACEHOLDER)
     box_origin.image(PATH_PLACEHOLDER)
     st.balloons()
@@ -207,7 +238,7 @@ if control_start_camera:
                                                                    int(current_time/60%60),
                                                                    int(current_time%60)))
             
-        box_status.subheader('▶️ In Class')
+        box_status.subheader('🔴 In Class')
         box_origin.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         
         flow = flow_model.forward(frame)

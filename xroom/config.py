@@ -6,11 +6,11 @@ PATH_ICON_SMALL = './image/icon.png'
 PATH_DEFAULT_VIDEO = '../video/sample-0.mp4'
 
 background_packs = {
-    'Sky': './backgrounds/sky.jpg',
-    'Forest': './backgrounds/forest.jpg',
-    'Mountain': './backgrounds/mountain.jpg',
-    'Night': './backgrounds/night.jpg',
-    'Valley': './backgrounds/valley.jpg'
+    '🌅 Sky': './backgrounds/sky.jpg',
+    '🌲 Forest': './backgrounds/forest.jpg',
+    '⛰️ Mountain': './backgrounds/mountain.jpg',
+    '🌌 Night': './backgrounds/night.jpg',
+    '🏞️ Valley': './backgrounds/valley.jpg'
 }
 
 language_map = {
@@ -23,4 +23,10 @@ language_map = {
     'Korean': 'ko',
     'Russian': 'ru',
     'Italian': 'it'
+}
+
+style_filters = {
+    '✒️ Origin': 'orgin',
+    '✒️ Warm': 'warm',
+    '✒️ Gray': 'gray',
 }

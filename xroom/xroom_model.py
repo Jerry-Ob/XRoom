@@ -6,7 +6,7 @@ from config import *
 def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
                     ocr_lang=['en'], track_plot_length=25, person_occupy_rate=0.6,
                     multi_process=-1, input_scale=0.5, super_resolve=True,
-                    track_plot_size=10):
+                    track_plot_size=10, style_filter='origin'):
     board_flow = FlowModuleList([
         BoardTracker(max_board=1, transition=0.9, drop_thres=0.97),
         FlowModuleBranch({
@@ -32,6 +32,7 @@ def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
                 'people': FlowModuleList([
                     SuperResolution(weights=WEIGHT_DRRN_PATH, residual_layers=9, gpu=gpu),
                     PersonBackgroundFuse(background=background_path, occupy_rate=person_occupy_rate),
+                    StyleFilter(style=style_filter),
                     BGR2RGB()
                 ]),
                 'path': TrackPlot(max_length=track_plot_length, plot_size=track_plot_size)
@@ -44,6 +45,7 @@ def load_flow_model(background_path, gpu=False, ocr_refresh_thres=800,
             FlowModuleBranch({
                 'people': FlowModuleList([
                     PersonBackgroundFuse(background=background_path, occupy_rate=person_occupy_rate),
+                    StyleFilter(style=style_filter),
                     BGR2RGB()
                 ]),
                 'path': TrackPlot(max_length=track_plot_length, plot_size=track_plot_size)

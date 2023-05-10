@@ -8,6 +8,7 @@ from .PeopleTrack import PeopleTrack
 from .SuperResolution import SuperResolution
 from .PersonBackgroundFuse import PersonBackgroundFuse
 from .TrackPlot import TrackPlot
+from .StyleFilter import StyleFilter
 
 
 from .BGR2RGB import BGR2RGB
