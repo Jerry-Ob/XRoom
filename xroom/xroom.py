@@ -246,7 +246,9 @@ if control_start_play:
         box_track.plotly_chart(people['path'][0], True)
         
         fps = 1 / (time.time() - start_time)
-        box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
+        
+        box_fps.metric('Real Time', '{:.1f}'.format(fps), '{}'.format(int(fps-origin_fps)))
+        # box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
         
         box_runtime.write(flow_model.run_time())
     box_status.subheader('⏸️ Class Over')
@@ -310,7 +312,8 @@ if control_start_camera:
         box_track.plotly_chart(people['path'][0], True)
         
         fps = 1 / (time.time() - start_time)
-        box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
+        box_fps.metric('Real Time', '{:.1f}'.format(fps), '{}'.format(int(fps-origin_fps)))
+        # box_fps.markdown('**Real Time(Origin):** {:.2f}({:.2f})'.format(fps, origin_fps))
         
         box_runtime.write(flow_model.run_time())
         
