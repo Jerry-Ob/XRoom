@@ -27,15 +27,16 @@ icon,_ = pannel_control.columns(2)
 icon.image(PATH_ICON)
 
 pannel_video, pannel_camera = pannel_control.tabs(['🎞️ Video', '📹 Camera'])
-control_path_video = pannel_video.text_input('🎞️ Video Path:', PATH_DEFAULT_VIDEO)
-control_start_play = pannel_video.button('&nbsp;🟢 Play&nbsp;')
+control_path_video = pannel_video.text_input('🎞️ Video Path', PATH_DEFAULT_VIDEO)
+
+control_start_play = pannel_video.button('&nbsp;&nbsp;🔴&nbsp;&nbsp;Play&nbsp;&nbsp;&nbsp;&nbsp;')
 
 pannel_camera.write('📹 Camera Preview')
 control_camera_preview = pannel_camera.empty()
-control_start_camera = pannel_camera.button('&nbsp;🟢 Start&nbsp;')
+control_start_camera = pannel_camera.button('&nbsp;&nbsp;🔴&nbsp;&nbsp;Start&nbsp;&nbsp;&nbsp;&nbsp;')
 control_camera_preview.image(PATH_PLACEHOLDER)
 
-pannel_setting.subheader('🛠️ Settings')
+pannel_setting.subheader('🛠️ Preferance')
 background_select, style_select = pannel_setting.columns(2)
 control_background_select = background_select.selectbox(
     '🖼️ Background',

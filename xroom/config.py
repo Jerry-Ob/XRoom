@@ -26,7 +26,8 @@ language_map = {
 }
 
 style_filters = {
-    '✒️ Origin': 'orgin',
-    '✒️ Warm': 'warm',
-    '✒️ Gray': 'gray',
+    '🎴 Origin': 'orgin',
+    '☀️ Warm': 'warm',
+    '◼️ Gray': 'gray',
+    '✒️ Sketch': 'sketch',
 }

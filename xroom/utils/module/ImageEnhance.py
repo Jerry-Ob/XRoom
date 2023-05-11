@@ -12,7 +12,6 @@ class ImageEnhance(FlowModule):
         for image in images:
             image = np.copy(image)
             image = improc.enhance.balance_light(image)
-            image = improc.enhance.increase_contract(image)
             image = improc.enhance.sharpen(image, strength=self.sharpen)
             images_.append(image)
         return [images_]

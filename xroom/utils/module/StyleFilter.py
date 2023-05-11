@@ -17,6 +17,6 @@ class StyleFilter(FlowModule):
         elif self.style == 'warm':
             return [[improc.style.sepia(image) for image in images]]
         elif self.style == 'sketch':
-            return [[improc.style.pencil_sketch(image) for image in images]]
+            return [[improc.style.stroke(image, 1) for image in images]]
         else:
             return [images]
